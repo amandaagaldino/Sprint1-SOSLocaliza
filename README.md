@@ -2,10 +2,10 @@
 
 ### Objetivo do Projeto
 
-O SOSLocaliza é um aplicativo inovador que visa promover a seguranca da populacão em situacão de risco climatico, combinando geolocalizacão, aprendizado de maquina e mapas interativos. O principal objetivo é fornecer uma ferramenta eficaz para que os usuarios possam identificar se estao em uma area de risco, enviar alertas emergenciais de forma rapida e acessar orientacoes preventivas para agir em eventos extremos como alagamentos e tempestades.
+O SOSLocaliza é um aplicativo inovador que visa promover a segurança da população em situação de risco climático, combinando geolocalização, aprendizado de máquina e mapas interativos. O principal objetivo é fornecer uma ferramenta eficaz para que os usuários possam identificar se estão em uma área de risco, enviar alertas emergenciais de forma rápida e acessar orientações preventivas para agir em eventos extremos, como alagamentos e tempestades.
 
 ## API de Usuários
-Essa aplicacao gerencia o CRUD de usuários implementada seguindo os princípios da Clean Architecture.
+Esta aplicação gerencia o CRUD (Create, Read, Update, Delete) de usuários e foi implementada seguindo os princípios da Clean Architecture.
 
 ## Funcionalidades Implementadas
 
