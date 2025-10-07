@@ -1,88 +1,75 @@
-using FluentValidation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Sprint1.Domain.Repositories;
 using Sprint1.Infrastructure.Data;
-using Sprint1.Mappings;
-using Sprint1.UseCase.Usuario;
+using Sprint1.Utils;
 
-namespace Sprint1
+namespace SOSLocaliza;
+
+using Microsoft.EntityFrameworkCore;
+
+public class Program
 {
-    public class Program
+    public static void Main(string[] args)
     {
-        public static void Main(string[] args)
-        {
-            var builder = WebApplication.CreateBuilder(args);
+        var builder = WebApplication.CreateBuilder(args);
+        
+        var swaggerConfig = builder
+            .Configuration
+            .GetSection("Swagger")
+            .Get<SwaggerConfig>();
 
-            // Add services to the container.
-            builder.Services.AddControllers();
-            builder.Services.AddAuthorization();
-
-            // Entity Framework - Oracle
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+        // Adiciona serviços ao container
+        builder.Services.AddControllers();
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen(swagger =>
             {
-                options.UseOracle(
-                    builder.Configuration.GetConnectionString("DefaultConnection"),
-                    oracleOptions =>
-                    {
-                        // Configurar timeout de conexão (30 segundos)
-                        oracleOptions.CommandTimeout(30);
-                    });
-                
-                // Habilitar logging sensível apenas em desenvolvimento
-                if (builder.Environment.IsDevelopment())
+                swagger.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    options.EnableSensitiveDataLogging();
-                    options.EnableDetailedErrors();
-                }
-            }, ServiceLifetime.Scoped);
-
-            // Repositories
-            builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
-
-            // Use Cases
-            builder.Services.AddScoped<CreateUsuarioUseCase>();
-            builder.Services.AddScoped<GetUsuarioByIdUseCase>();
-            builder.Services.AddScoped<GetAllUsuariosUseCase>();
-            builder.Services.AddScoped<AlterarEmailUsuarioUseCase>();
-            builder.Services.AddScoped<AlterarSenhaUsuarioUseCase>();
-            builder.Services.AddScoped<DeleteUsuarioUseCase>();
-
-            // AutoMapper
-            builder.Services.AddAutoMapper(cfg =>
-            {
-                cfg.AddProfile<UsuarioMappingProfile>();
-            });
-
-            // FluentValidation
-            builder.Services.AddValidatorsFromAssemblyContaining<Program>();
-
-            // Swagger/OpenAPI
-            builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen(c =>
-            {
-                c.SwaggerDoc("v1", new OpenApiInfo
-                {
-                    Title = "Sprint1 API",
+                    Title = swaggerConfig.Title,
                     Version = "v1",
-                    Description = "API para gerenciamento de usuários com Oracle Autonomous Database"
+                    Description = swaggerConfig.Description,
+                    Contact = swaggerConfig.Contact
                 });
-            });
+                
+                swagger.EnableAnnotations();
 
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline.
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
+                foreach (var server in swaggerConfig.Servers)
+                {
+                    swagger.AddServer(new OpenApiServer
+                        {
+                         Url   = server.Url,
+                         Description = server.Name
+                        });
+                }
             }
+            );
 
-            app.UseHttpsRedirection();
-            app.UseAuthorization();
-            app.MapControllers();
+        builder.Services.AddDbContext<ApplicationDbContext>(options =>
+            options.UseOracle(builder.Configuration.GetConnectionString("OracleDb"))
+        );
+        
+        builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        //builder.Services.AddScoped<IUsuarioRepository, UsuarioRepository>();
 
-            app.Run();
+        
+        var app = builder.Build();
+
+        // Configuração do pipeline HTTP
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI(ui =>
+                {
+                    ui.SwaggerEndpoint("/swagger/v1/swagger.json", "Sprint1.API v1");
+                    ui.RoutePrefix = string.Empty;
+                }            
+            );
         }
+
+        app.UseHttpsRedirection();
+        app.UseAuthorization();
+        app.UseRouting();
+        app.MapControllers();
+        app.Run();
     }
-}
+} 
